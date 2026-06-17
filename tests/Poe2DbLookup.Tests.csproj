@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\Models\*.cs" Link="Models\%(Filename)%(Extension)" />
+    <Compile Include="..\Services\ClipboardBridge.cs" Link="Services\ClipboardBridge.cs" />
+    <Compile Include="..\Services\AppSettings.cs" Link="Services\AppSettings.cs" />
+    <Compile Include="..\Services\HotkeyGesture.cs" Link="Services\HotkeyGesture.cs" />
+    <Compile Include="..\Services\InteractionWaiter.cs" Link="Services\InteractionWaiter.cs" />
+    <Compile Include="..\Services\Poe2DbClient.cs" Link="Services\Poe2DbClient.cs" />
+    <Compile Include="..\Services\Poe2DbUrlBuilder.cs" Link="Services\Poe2DbUrlBuilder.cs" />
+    <Compile Include="..\Services\NameIndex.cs" Link="Services\NameIndex.cs" />
+    <Compile Include="..\Services\NativeMethods.cs" Link="Services\NativeMethods.cs" />
+    <Compile Include="..\Services\StartupManager.cs" Link="Services\StartupManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PinYinConverterCore" Version="1.0.2" />
+  </ItemGroup>
+</Project>

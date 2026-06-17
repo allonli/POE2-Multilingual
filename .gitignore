@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+
+publish/*
+!publish/Poe2DbLookup.exe
+publish-next/
+
+tests/bin/
+tests/obj/
+tests/*.png

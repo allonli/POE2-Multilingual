@@ -1,0 +1,91 @@
+# POE2-Multilingual
+
+一个 Windows 原生 WPF 小工具，用于查询 PoE2DB 的简中、繁中、英文名称和内部 `value` 对应关系。应用启动后默认驻留系统托盘，界面采用紧凑的 Spotlight/Raycast 风格：置顶小窗口、快速输入、方向键选择、回车粘贴；结果列表只展示简中、繁中、英文和类型，`value` 保留在二级输出菜单里。
+
+## 运行
+
+发布后的可执行文件位于：
+
+```powershell
+.\publish\Poe2DbLookup.exe
+```
+
+开发环境运行：
+
+```powershell
+& 'C:\Users\allon\.dotnet\dotnet.exe' run --project .\Poe2DbLookup.csproj
+```
+
+## 交互
+
+- 默认 `左 Ctrl+E`：从任意窗口呼出查询窗口，可在设置里修改。应用会优先读取当前焦点控件里的选中文本，并立即显示查询窗口；UIA 不可用时再异步回退到剪贴板 `Ctrl+C`，并用哨兵值避免误读旧剪贴板。没有选中文本时会清空搜索框，避免沿用上一次查询。
+- 搜索支持常用繁简体互通、空格分段模糊匹配和拼音匹配，例如 `远射` / `遠射`、`我 火`、`wjnh` / `woji` 都能匹配对应词条。
+- 结果列表里出现省略号只是显示裁剪；悬停 Tooltip 和二级菜单复制都会使用完整原文。
+- `Esc` 或 `Ctrl+W`：隐藏查询窗口。
+- 默认 `F5`：刷新 PoE2DB 数据，可在设置里修改。列表下方状态文案会显示当前刷新快捷键。
+- `上 / 下`：选择搜索结果。
+- `Enter` 或双击结果：在当前选中结果行附近打开二级输出菜单，可选择粘贴 `简中`、`繁中`、`英文` 或 `value`。按住 `Ctrl` 或 `Alt` 后回车/左键选择菜单项，会打开对应 PoE2DB 语言页面，例如 `https://poe2db.tw/us/Kalguuran_Gems`。如果目标输入框支持 UI Automation 且当前内容被全选或为空，会直接写入完整输出；否则继续使用剪贴板和左 Ctrl+V。
+- 查询窗口右下角齿轮按钮：打开设置窗口。
+- 系统托盘图标右键菜单：`设置` 打开设置窗口，`退出` 关闭应用。
+- 设置窗口支持监听方式修改呼出快捷键、刷新快捷键，并可勾选 `开机启动`；监听新快捷键期间会临时暂停全局呼出热键。
+
+注意：全局热键只有在 `Poe2DbLookup.exe` 正在运行并驻留系统托盘时才生效。
+
+## 数据刷新和缓存
+
+首次启动时，如果本地没有缓存，会自动刷新数据。缓存文件位于 EXE 目录下：
+
+```text
+cache\poe2db_names.json
+```
+
+刷新流程：
+
+1. 请求 `https://poe2db.tw/cn/`。
+2. 从 HTML 解析当前 `poedb_header...js`。
+3. 请求 header JS。
+4. 从 JS 解析 `autocompletecb_cn/tw/us` 的真实 JSON 文件名。
+5. 分别下载三份 JSON。
+6. 用 `value` 合并为三语索引并写入缓存。
+
+## 构建和验证
+
+运行核心测试：
+
+```powershell
+& 'C:\Users\allon\.dotnet\dotnet.exe' run --project .\tests\Poe2DbLookup.Tests.csproj
+```
+
+运行联网最小验证：
+
+```powershell
+& 'C:\Users\allon\.dotnet\dotnet.exe' run --project .\tests\Poe2DbLookup.Tests.csproj -- --live
+```
+
+运行真实窗口交互探针：
+
+```powershell
+& 'C:\Users\allon\.dotnet\dotnet.exe' run --project .\tests\Poe2DbLookup.Tests.csproj -- --interaction
+```
+
+发布并启动 `.\publish\Poe2DbLookup.exe` 后，运行发布版真实窗口验收：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RealDotnetTargetVerification.ps1
+```
+
+发布当前机器可运行的便携版：
+
+```powershell
+& 'C:\Users\allon\.dotnet\dotnet.exe' publish .\Poe2DbLookup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o .\publish
+```
+
+如果要给 ARM64 Windows 使用，把 `win-x64` 改为 `win-arm64`。
+
+## 常见问题
+
+- 呼出快捷键没反应：先确认 `.\publish\Poe2DbLookup.exe` 正在运行并且系统托盘里有应用图标；如果改过快捷键，以设置窗口显示为准。
+- 无法覆盖发布文件：通常是旧版 `Poe2DbLookup.exe` 仍在运行，先关闭进程后重新发布；如果旧进程是管理员权限启动，普通权限无法停止它。
+- 找不到 `poedb_header JS`：PoE2DB 页面结构可能变化。
+- 找不到 `autocompletecb_*`：header JS 内文件映射格式可能变化。
+- JSON 返回 `403/404`：CDN 拒绝或文件 hash 已更新，按 `F5` 重新刷新。
