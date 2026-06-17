@@ -7,6 +7,8 @@ TestResults/
 
 publish/*
 !publish/Poe2DbLookup.exe
+publish-self-contained/
+publish-dotnet8/
 publish-next/
 
 tests/bin/

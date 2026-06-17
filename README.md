@@ -4,7 +4,12 @@
 
 ## 运行
 
-发布后的可执行文件位于：
+仓库提供两种 Windows x64 发布包：
+
+- `dist\Poe2DbLookup-win-x64-self-contained.zip`：直接运行版，不需要预装 .NET，体积较大。解压后运行 `Poe2DbLookup.exe`。
+- `dist\Poe2DbLookup-win-x64-dotnet8.zip`：小包，适合已经安装 `.NET 8 Desktop Runtime` 的机器。解压后运行 `Poe2DbLookup.exe`。
+
+如果不确定目标机器有没有 .NET 环境，优先使用直接运行版。仓库里也保留了一份直接运行的单文件 EXE：
 
 ```powershell
 .\publish\Poe2DbLookup.exe
@@ -74,17 +79,31 @@ cache\poe2db_names.json
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RealDotnetTargetVerification.ps1
 ```
 
-发布当前机器可运行的便携版：
+发布直接运行版：
 
 ```powershell
-& 'C:\Users\allon\.dotnet\dotnet.exe' publish .\Poe2DbLookup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o .\publish
+& 'C:\Users\allon\.dotnet\dotnet.exe' publish .\Poe2DbLookup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o .\publish-self-contained
 ```
 
-如果要给 ARM64 Windows 使用，把 `win-x64` 改为 `win-arm64`。
+发布 `.NET 8 Desktop Runtime` 小包：
+
+```powershell
+& 'C:\Users\allon\.dotnet\dotnet.exe' publish .\Poe2DbLookup.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o .\publish-dotnet8
+```
+
+压缩发布包：
+
+```powershell
+Compress-Archive -Path .\publish-self-contained\* -DestinationPath .\dist\Poe2DbLookup-win-x64-self-contained.zip -Force
+Compress-Archive -Path .\publish-dotnet8\* -DestinationPath .\dist\Poe2DbLookup-win-x64-dotnet8.zip -Force
+```
+
+如果要给 ARM64 Windows 使用，把 `win-x64` 改为 `win-arm64`，并同步调整 zip 文件名。
 
 ## 常见问题
 
 - 呼出快捷键没反应：先确认 `.\publish\Poe2DbLookup.exe` 正在运行并且系统托盘里有应用图标；如果改过快捷键，以设置窗口显示为准。
+- 小包无法启动：先安装 `.NET 8 Desktop Runtime`，或者改用直接运行版。
 - 无法覆盖发布文件：通常是旧版 `Poe2DbLookup.exe` 仍在运行，先关闭进程后重新发布；如果旧进程是管理员权限启动，普通权限无法停止它。
 - 找不到 `poedb_header JS`：PoE2DB 页面结构可能变化。
 - 找不到 `autocompletecb_*`：header JS 内文件映射格式可能变化。
