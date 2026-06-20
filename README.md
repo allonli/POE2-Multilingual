@@ -28,7 +28,7 @@
 ### 最简单安装方式
 
 1. 下载只包含 Raycast 插件的压缩包：  
-   [raycast-poe2db-lookup.zip](https://github.com/allonli/POE2-Multilingual/releases/download/raycast-poe2db-lookup-v0.1.0/raycast-poe2db-lookup.zip)
+   [raycast-poe2db-lookup-v0.1.1.zip](https://github.com/allonli/POE2-Multilingual/releases/download/raycast-poe2db-lookup-v0.1.1/raycast-poe2db-lookup-v0.1.1.zip)
 2. 解压后进入 `raycast-poe2db-lookup` 目录。
 3. 在该目录运行：
 
