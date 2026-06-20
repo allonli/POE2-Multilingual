@@ -21,9 +21,39 @@
 & 'C:\Users\allon\.dotnet\dotnet.exe' run --project .\Poe2DbLookup.csproj
 ```
 
+## Raycast 扩展
+
+仓库内新增 `raycast-poe2db-lookup`，提供一套 Raycast 版查询能力。它不注册全局快捷键；在 Raycast 里给 `Search PoE2DB Names` 命令设置你自己的快捷键即可。
+
+Raycast 版包含两个命令：
+
+- `Search PoE2DB Names`：打开查询列表，优先用 Raycast `getSelectedText` 读取前台应用选中文本作为初始查询；支持简中、繁中、英文、`value`、空格分段模糊和拼音搜索。结果列表显示简中、繁中、英文和类型，`value` 只出现在输出动作里。动作菜单可选择粘贴、复制或打开对应 PoE2DB 页面。
+- `Refresh PoE2DB Data`：刷新 PoE2DB autocomplete 数据并写入 Raycast 扩展缓存。
+
+Raycast 版缓存位于 Raycast 分配的扩展 support 目录下：
+
+```text
+cache\poe2db_names.json
+```
+
+开发和验证：
+
+```powershell
+cd .\raycast-poe2db-lookup
+$env:Path = 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;' + $env:Path
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' install
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' test
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' typecheck
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' build
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' lint
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' dev
+```
+
+如果本机 PATH 已有 `node` 和 `pnpm`，可以直接使用 `pnpm install/test/typecheck/build/lint/dev`。`package.json` 的 `author` 当前使用 Raycast 用户名 `allonli`；发布到其他账号前需要改成对应 Raycast 用户名。
+
 ## 交互
 
-- 默认 `左 Ctrl+E`：从任意窗口呼出查询窗口，可在设置里修改。应用会优先读取当前焦点控件里的选中文本，并立即显示查询窗口；UIA 不可用时再异步回退到剪贴板 `Ctrl+C`，并用哨兵值避免误读旧剪贴板。没有选中文本时会清空搜索框，避免沿用上一次查询。
+- 默认 `左 Ctrl+E`：从任意窗口呼出查询窗口，可在设置里修改。应用会优先读取当前焦点控件里的选中文本，并立即显示查询窗口；UIA 不可用且外部窗口不是全屏时，再异步回退到剪贴板 `Ctrl+C`，并用哨兵值避免误读旧剪贴板。全屏外部窗口不会被还原或缩小。没有选中文本时会清空搜索框，避免沿用上一次查询。
 - 搜索支持常用繁简体互通、空格分段模糊匹配和拼音匹配，例如 `远射` / `遠射`、`我 火`、`wjnh` / `woji` 都能匹配对应词条。
 - 结果列表里出现省略号只是显示裁剪；悬停 Tooltip 和二级菜单复制都会使用完整原文。
 - `Esc` 或 `Ctrl+W`：隐藏查询窗口。
@@ -59,6 +89,15 @@ cache\poe2db_names.json
 
 ```powershell
 & 'C:\Users\allon\.dotnet\dotnet.exe' run --project .\tests\Poe2DbLookup.Tests.csproj
+```
+
+运行 Raycast 扩展测试和构建：
+
+```powershell
+cd .\raycast-poe2db-lookup
+$env:Path = 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;' + $env:Path
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' test
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' build
 ```
 
 运行联网最小验证：
