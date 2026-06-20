@@ -29,7 +29,7 @@
 - `Search PoE2DB Names` 默认不调用 Raycast `getSelectedText`，避免游戏窗口里触发 Raycast 的 `copy_text` 焦点切换导致首按快捷键闪烁消失。只有用户在扩展设置中显式打开 `Prefill Selected Text` 时才读取前台选中文本作为初始查询。
 - Raycast 结果列表显示简中、繁中、英文和类型，不把 `value` 当作列表列展示；`value` 保留在粘贴、复制和打开网页动作中。
 - 输出动作分为 `粘贴为...`、`复制为...`、`打开 PoE2DB 页面...`，每组都提供简中、繁中、英文和 `value`。
-- `Refresh PoE2DB Data` 是 no-view 命令，刷新 PoE2DB autocomplete 数据并写入 Raycast support 目录下的 `cache\poe2db_names.json`。
+- `Refresh PoE2DB Data` 是 no-view 命令，刷新 PoE2DB autocomplete 数据并写入 Raycast support 目录下的 `cache\poe2db_names.json`，同时预计算搜索字段和拼音字段到 `cache\poe2db_search_index.json`，避免查询命令每次打开都重建索引。
 - Raycast 版不迁移 WPF 托盘、开机启动、低层键盘 hook、UIA 直接写入等 Windows 桌面专属能力；这些由 Raycast 命令、快捷键设置和 `Action.Paste` 承担。
 
 ## 常用命令
@@ -66,7 +66,7 @@ $env:Path = 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependen
 - `Services\Poe2DbClient.cs`：PoE2DB 页面、header JS 和 autocomplete JSON 下载解析。
 - `Services\NameIndex.cs`：按 `value` 合并三语数据并提供搜索，搜索匹配会做常用繁简体归一化、空格分段模糊匹配和拼音字段缓存。
 - `raycast-poe2db-lookup\src\poe2db-data.ts`：Raycast 版 PoE2DB 下载、header JS 解析、autocomplete 文件解析和三语合并。
-- `raycast-poe2db-lookup\src\search-index.ts`：Raycast 版搜索索引，支持繁简归一、分段模糊和拼音匹配。
+- `raycast-poe2db-lookup\src\search-index.ts`：Raycast 版搜索索引，支持繁简归一、分段模糊和拼音匹配，并提供可缓存的预构建索引数据。
 - `raycast-poe2db-lookup\src\search.tsx`：Raycast 查询列表和粘贴、复制、打开网页动作。
 - `raycast-poe2db-lookup\src\refresh.ts`：Raycast no-view 刷新命令。
 - `raycast-poe2db-lookup\tests\core.test.ts`：Raycast 版核心解析、合并、搜索和输出动作测试。

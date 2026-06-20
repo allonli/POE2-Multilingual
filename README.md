@@ -28,7 +28,7 @@
 ### 最简单安装方式
 
 1. 下载只包含 Raycast 插件的压缩包：  
-   [raycast-poe2db-lookup-v0.1.1.zip](https://github.com/allonli/POE2-Multilingual/releases/download/raycast-poe2db-lookup-v0.1.1/raycast-poe2db-lookup-v0.1.1.zip)
+   [raycast-poe2db-lookup-v0.1.2.zip](https://github.com/allonli/POE2-Multilingual/releases/download/raycast-poe2db-lookup-v0.1.2/raycast-poe2db-lookup-v0.1.2.zip)
 2. 解压后进入 `raycast-poe2db-lookup` 目录。
 3. 在该目录运行：
 
@@ -50,7 +50,10 @@ Raycast 版缓存位于 Raycast 分配的扩展 support 目录下：
 
 ```text
 cache\poe2db_names.json
+cache\poe2db_search_index.json
 ```
+
+`poe2db_names.json` 保存原始三语词条；`poe2db_search_index.json` 保存已预计算的搜索字段和拼音字段。升级后第一次打开或运行 `Refresh PoE2DB Data` 会生成搜索索引缓存，后续打开查询命令时不再每次重建拼音索引。
 
 如果要从完整仓库里的源码运行，进入插件目录后执行同样的命令：
 

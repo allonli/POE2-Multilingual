@@ -48,11 +48,19 @@ const TRADITIONAL_TO_SIMPLIFIED = new Map<string, string>([
   ["貼", "贴"],
 ]);
 
-type SearchRecord = {
+export const SEARCH_INDEX_CACHE_VERSION = 1;
+
+export type PreparedSearchRecord = {
   record: NameRecord;
   fields: string[];
   normalizedFields: string[];
   pinyinFields: string[];
+};
+
+export type PreparedSearchIndexData = {
+  version: typeof SEARCH_INDEX_CACHE_VERSION;
+  records: NameRecord[];
+  searchRecords: PreparedSearchRecord[];
 };
 
 export type SearchIndex = {
@@ -61,6 +69,12 @@ export type SearchIndex = {
 };
 
 export function createSearchIndex(records: NameRecord[]): SearchIndex {
+  return createSearchIndexFromData(prepareSearchIndexData(records));
+}
+
+export function prepareSearchIndexData(
+  records: NameRecord[],
+): PreparedSearchIndexData {
   const sortedRecords = records
     .filter((record) => record.value.trim().length > 0)
     .sort((left, right) => {
@@ -74,6 +88,26 @@ export function createSearchIndex(records: NameRecord[]): SearchIndex {
         : left.value.localeCompare(right.value);
     });
   const searchRecords = sortedRecords.map(createSearchRecord);
+
+  return {
+    version: SEARCH_INDEX_CACHE_VERSION,
+    records: sortedRecords,
+    searchRecords,
+  };
+}
+
+export function createSearchIndexFromData(
+  data: PreparedSearchIndexData,
+): SearchIndex {
+  if (
+    data.version !== SEARCH_INDEX_CACHE_VERSION ||
+    data.records.length !== data.searchRecords.length
+  ) {
+    throw new Error("Unsupported PoE2DB search index cache.");
+  }
+
+  const sortedRecords = data.records;
+  const searchRecords = data.searchRecords;
 
   return {
     records: sortedRecords,
@@ -139,7 +173,7 @@ export function normalizeSearchText(value: string): string {
     .join("");
 }
 
-function createSearchRecord(record: NameRecord): SearchRecord {
+function createSearchRecord(record: NameRecord): PreparedSearchRecord {
   const fields = [record.cnLabel, record.twLabel, record.usLabel, record.value];
   return {
     record,
@@ -150,7 +184,7 @@ function createSearchRecord(record: NameRecord): SearchRecord {
 }
 
 function matchScore(
-  item: SearchRecord,
+  item: PreparedSearchRecord,
   query: string,
   normalizedQuery: string,
   queryTokens: string[],
@@ -211,7 +245,7 @@ function matchScore(
 }
 
 function shortestMatchingLength(
-  item: SearchRecord,
+  item: PreparedSearchRecord,
   query: string,
   normalizedQuery: string,
   queryTokens: string[],

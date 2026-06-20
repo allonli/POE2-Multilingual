@@ -12,14 +12,27 @@ import {
 } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
 
-import { getCachePath, hasCache, loadCache, saveCache } from "./cache";
-import { refreshPoe2DbData } from "./poe2db-data";
+import {
+  getCachePath,
+  getSearchIndexCachePath,
+  hasCache,
+  loadCache,
+  loadSearchIndexCache,
+  saveCache,
+  saveSearchIndexCache,
+} from "./cache";
 import { getOutputChoices } from "./output";
+import { refreshPoe2DbData } from "./poe2db-data";
 import {
   shouldReadSelectedText,
   type SelectedTextPreferences,
 } from "./selected-text";
-import { createSearchIndex, type SearchIndex } from "./search-index";
+import {
+  createSearchIndexFromData,
+  prepareSearchIndexData,
+  type PreparedSearchIndexData,
+  type SearchIndex,
+} from "./search-index";
 import type { NameRecord } from "./types";
 
 export default function Command() {
@@ -30,6 +43,10 @@ export default function Command() {
   const [error, setError] = useState<string | null>(null);
 
   const cachePath = useMemo(() => getCachePath(environment.supportPath), []);
+  const searchIndexCachePath = useMemo(
+    () => getSearchIndexCachePath(environment.supportPath),
+    [],
+  );
   const preferences = useMemo(
     () => getPreferenceValues<SelectedTextPreferences>(),
     [],
@@ -51,15 +68,18 @@ export default function Command() {
           }
         }
 
-        const records = hasCache(cachePath)
-          ? await loadCache(cachePath)
-          : await refreshAndSave(cachePath);
+        const data = await loadOrCreateSearchIndexData(
+          cachePath,
+          searchIndexCachePath,
+        );
         if (cancelled) {
           return;
         }
 
-        setIndex(createSearchIndex(records));
-        setStatus(`已加载 ${records.length.toLocaleString()} 条 PoE2DB 记录`);
+        setIndex(createSearchIndexFromData(data));
+        setStatus(
+          `已加载 ${data.records.length.toLocaleString()} 条 PoE2DB 记录`,
+        );
       } catch (unknownError) {
         if (!cancelled) {
           const message = errorMessage(unknownError);
@@ -82,7 +102,7 @@ export default function Command() {
     return () => {
       cancelled = true;
     };
-  }, [cachePath, preferences]);
+  }, [cachePath, searchIndexCachePath, preferences]);
 
   async function refreshData() {
     setIsLoading(true);
@@ -92,12 +112,14 @@ export default function Command() {
       title: "正在刷新 PoE2DB 数据...",
     });
     try {
-      const records = await refreshAndSave(cachePath);
-      setIndex(createSearchIndex(records));
-      setStatus(`刷新完成：${records.length.toLocaleString()} 条 PoE2DB 记录`);
+      const data = await refreshAndSave(cachePath, searchIndexCachePath);
+      setIndex(createSearchIndexFromData(data));
+      setStatus(
+        `刷新完成：${data.records.length.toLocaleString()} 条 PoE2DB 记录`,
+      );
       toast.style = Toast.Style.Success;
       toast.title = "PoE2DB 数据已刷新";
-      toast.message = `${records.length.toLocaleString()} 条记录`;
+      toast.message = `${data.records.length.toLocaleString()} 条记录`;
     } catch (unknownError) {
       const message = errorMessage(unknownError);
       setError(message);
@@ -207,10 +229,38 @@ function RecordActions({
   );
 }
 
-async function refreshAndSave(cachePath: string): Promise<NameRecord[]> {
+async function loadOrCreateSearchIndexData(
+  cachePath: string,
+  searchIndexCachePath: string,
+): Promise<PreparedSearchIndexData> {
+  if (hasCache(searchIndexCachePath)) {
+    return loadSearchIndexCache(searchIndexCachePath);
+  }
+
+  if (hasCache(cachePath)) {
+    const records = await loadCache(cachePath);
+    return savePreparedSearchIndex(searchIndexCachePath, records);
+  }
+
+  return refreshAndSave(cachePath, searchIndexCachePath);
+}
+
+async function refreshAndSave(
+  cachePath: string,
+  searchIndexCachePath: string,
+): Promise<PreparedSearchIndexData> {
   const records = await refreshPoe2DbData();
   await saveCache(cachePath, records);
-  return records;
+  return savePreparedSearchIndex(searchIndexCachePath, records);
+}
+
+async function savePreparedSearchIndex(
+  searchIndexCachePath: string,
+  records: NameRecord[],
+): Promise<PreparedSearchIndexData> {
+  const data = prepareSearchIndexData(records);
+  await saveSearchIndexCache(searchIndexCachePath, data);
+  return data;
 }
 
 async function readSelectedText(): Promise<string> {

@@ -2,15 +2,28 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { buildPoe2DbUrl } from "../src/poe2db-url";
-import { findAutocompleteFileName, findHeaderScriptUrl, mergeRecords, type AutocompleteItem } from "../src/poe2db-data";
-import { createSearchIndex } from "../src/search-index";
+import {
+  findAutocompleteFileName,
+  findHeaderScriptUrl,
+  mergeRecords,
+  type AutocompleteItem,
+} from "../src/poe2db-data";
+import {
+  createSearchIndex,
+  createSearchIndexFromData,
+  prepareSearchIndexData,
+} from "../src/search-index";
 import { getOutputChoices } from "../src/output";
 import { shouldReadSelectedText } from "../src/selected-text";
 
 test("parses PoE2DB header script URL from HTML", () => {
-  const html = '<script defer src="https://cdn.poe2db.tw/js/poedb_header.d4672c828b046d1e.js"></script>';
+  const html =
+    '<script defer src="https://cdn.poe2db.tw/js/poedb_header.d4672c828b046d1e.js"></script>';
 
-  assert.equal(findHeaderScriptUrl(html), "https://cdn.poe2db.tw/js/poedb_header.d4672c828b046d1e.js");
+  assert.equal(
+    findHeaderScriptUrl(html),
+    "https://cdn.poe2db.tw/js/poedb_header.d4672c828b046d1e.js",
+  );
 });
 
 test("parses autocompletecb file names from header JS", () => {
@@ -22,9 +35,18 @@ test("parses autocompletecb file names from header JS", () => {
     };
   `;
 
-  assert.equal(findAutocompleteFileName(js, "cn"), "autocompletecb_cn.111.json");
-  assert.equal(findAutocompleteFileName(js, "tw"), "autocompletecb_tw.222.json");
-  assert.equal(findAutocompleteFileName(js, "us"), "autocompletecb_us.333.json");
+  assert.equal(
+    findAutocompleteFileName(js, "cn"),
+    "autocompletecb_cn.111.json",
+  );
+  assert.equal(
+    findAutocompleteFileName(js, "tw"),
+    "autocompletecb_tw.222.json",
+  );
+  assert.equal(
+    findAutocompleteFileName(js, "us"),
+    "autocompletecb_us.333.json",
+  );
 });
 
 test("merges multilingual records by value and preserves output fields", () => {
@@ -74,6 +96,26 @@ test("search ranks labels, values, simplified/traditional variants, fuzzy tokens
   assert.equal(index.search("woji")[0]?.value, "I_Am_Rage");
 });
 
+test("prepared search index cache preserves pinyin search fields", () => {
+  const data = prepareSearchIndexData([
+    {
+      value: "I_Am_Rage",
+      cnLabel: "\u6211\u5373\u6012\u706b",
+      twLabel: "\u6211\u5373\u6012\u706b",
+      usLabel: "I Am Rage",
+      type: "Skill",
+      className: "skill",
+    },
+  ]);
+
+  assert.equal(data.version, 1);
+  assert.deepEqual(data.searchRecords[0]?.pinyinFields, ["wojinuhuo", "wjnh"]);
+
+  const index = createSearchIndexFromData(JSON.parse(JSON.stringify(data)));
+  assert.equal(index.search("wjnh")[0]?.value, "I_Am_Rage");
+  assert.equal(index.search("woji")[0]?.value, "I_Am_Rage");
+});
+
 test("builds language URLs and output choices for copy, paste, and browser actions", () => {
   const record = {
     value: "Kalguuran_Gems",
@@ -84,12 +126,31 @@ test("builds language URLs and output choices for copy, paste, and browser actio
     className: "gemitem",
   };
 
-  assert.equal(buildPoe2DbUrl("us", record.value), "https://poe2db.tw/us/Kalguuran_Gems");
+  assert.equal(
+    buildPoe2DbUrl("us", record.value),
+    "https://poe2db.tw/us/Kalguuran_Gems",
+  );
   assert.deepEqual(getOutputChoices(record), [
-    { label: "简中", text: "卡古兰宝石", url: "https://poe2db.tw/cn/Kalguuran_Gems" },
-    { label: "繁中", text: "卡古蘭寶石", url: "https://poe2db.tw/tw/Kalguuran_Gems" },
-    { label: "英文", text: "Kalguuran Gems", url: "https://poe2db.tw/us/Kalguuran_Gems" },
-    { label: "value", text: "Kalguuran_Gems", url: "https://poe2db.tw/us/Kalguuran_Gems" },
+    {
+      label: "简中",
+      text: "卡古兰宝石",
+      url: "https://poe2db.tw/cn/Kalguuran_Gems",
+    },
+    {
+      label: "繁中",
+      text: "卡古蘭寶石",
+      url: "https://poe2db.tw/tw/Kalguuran_Gems",
+    },
+    {
+      label: "英文",
+      text: "Kalguuran Gems",
+      url: "https://poe2db.tw/us/Kalguuran_Gems",
+    },
+    {
+      label: "value",
+      text: "Kalguuran_Gems",
+      url: "https://poe2db.tw/us/Kalguuran_Gems",
+    },
   ]);
 });
 
@@ -99,6 +160,11 @@ test("does not read selected text unless the preference is explicitly enabled", 
   assert.equal(shouldReadSelectedText({ prefillSelectedText: true }), true);
 });
 
-function item(label: string, value: string, desc: string, className: string): AutocompleteItem {
+function item(
+  label: string,
+  value: string,
+  desc: string,
+  className: string,
+): AutocompleteItem {
   return { label, value, desc, class: className };
 }

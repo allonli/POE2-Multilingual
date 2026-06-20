@@ -1,7 +1,13 @@
 import { environment, showHUD, showToast, Toast } from "@raycast/api";
 
-import { getCachePath, saveCache } from "./cache";
+import {
+  getCachePath,
+  getSearchIndexCachePath,
+  saveCache,
+  saveSearchIndexCache,
+} from "./cache";
 import { refreshPoe2DbData } from "./poe2db-data";
+import { prepareSearchIndexData } from "./search-index";
 
 export default async function Command() {
   const toast = await showToast({
@@ -12,6 +18,10 @@ export default async function Command() {
   try {
     const records = await refreshPoe2DbData();
     await saveCache(getCachePath(environment.supportPath), records);
+    await saveSearchIndexCache(
+      getSearchIndexCachePath(environment.supportPath),
+      prepareSearchIndexData(records),
+    );
     toast.style = Toast.Style.Success;
     toast.title = "PoE2DB 数据已刷新";
     toast.message = `${records.length.toLocaleString()} 条记录`;
