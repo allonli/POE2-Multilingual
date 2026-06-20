@@ -3,6 +3,7 @@ import {
   ActionPanel,
   Color,
   environment,
+  getPreferenceValues,
   getSelectedText,
   Icon,
   List,
@@ -14,6 +15,10 @@ import { useEffect, useMemo, useState } from "react";
 import { getCachePath, hasCache, loadCache, saveCache } from "./cache";
 import { refreshPoe2DbData } from "./poe2db-data";
 import { getOutputChoices } from "./output";
+import {
+  shouldReadSelectedText,
+  type SelectedTextPreferences,
+} from "./selected-text";
 import { createSearchIndex, type SearchIndex } from "./search-index";
 import type { NameRecord } from "./types";
 
@@ -25,6 +30,10 @@ export default function Command() {
   const [error, setError] = useState<string | null>(null);
 
   const cachePath = useMemo(() => getCachePath(environment.supportPath), []);
+  const preferences = useMemo(
+    () => getPreferenceValues<SelectedTextPreferences>(),
+    [],
+  );
   const results = useMemo(
     () => index?.search(searchText) ?? [],
     [index, searchText],
@@ -35,9 +44,11 @@ export default function Command() {
 
     async function initialize() {
       try {
-        const selectedText = await readSelectedText();
-        if (!cancelled && selectedText) {
-          setSearchText(selectedText);
+        if (shouldReadSelectedText(preferences)) {
+          const selectedText = await readSelectedText();
+          if (!cancelled && selectedText) {
+            setSearchText(selectedText);
+          }
         }
 
         const records = hasCache(cachePath)
@@ -71,7 +82,7 @@ export default function Command() {
     return () => {
       cancelled = true;
     };
-  }, [cachePath]);
+  }, [cachePath, preferences]);
 
   async function refreshData() {
     setIsLoading(true);

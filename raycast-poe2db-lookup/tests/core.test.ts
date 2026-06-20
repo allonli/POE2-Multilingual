@@ -5,6 +5,7 @@ import { buildPoe2DbUrl } from "../src/poe2db-url";
 import { findAutocompleteFileName, findHeaderScriptUrl, mergeRecords, type AutocompleteItem } from "../src/poe2db-data";
 import { createSearchIndex } from "../src/search-index";
 import { getOutputChoices } from "../src/output";
+import { shouldReadSelectedText } from "../src/selected-text";
 
 test("parses PoE2DB header script URL from HTML", () => {
   const html = '<script defer src="https://cdn.poe2db.tw/js/poedb_header.d4672c828b046d1e.js"></script>';
@@ -90,6 +91,12 @@ test("builds language URLs and output choices for copy, paste, and browser actio
     { label: "英文", text: "Kalguuran Gems", url: "https://poe2db.tw/us/Kalguuran_Gems" },
     { label: "value", text: "Kalguuran_Gems", url: "https://poe2db.tw/us/Kalguuran_Gems" },
   ]);
+});
+
+test("does not read selected text unless the preference is explicitly enabled", () => {
+  assert.equal(shouldReadSelectedText({}), false);
+  assert.equal(shouldReadSelectedText({ prefillSelectedText: false }), false);
+  assert.equal(shouldReadSelectedText({ prefillSelectedText: true }), true);
 });
 
 function item(label: string, value: string, desc: string, className: string): AutocompleteItem {

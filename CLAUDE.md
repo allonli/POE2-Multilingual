@@ -26,7 +26,7 @@
 ## Raycast 扩展约定
 
 - 不在扩展内注册单独全局快捷键；用户在 Raycast 里给 `Search PoE2DB Names` 自行设置快捷键。
-- `Search PoE2DB Names` 用 Raycast `getSelectedText` 读取前台选中文本作为初始查询；读取不到时保持空搜索框。
+- `Search PoE2DB Names` 默认不调用 Raycast `getSelectedText`，避免游戏窗口里触发 Raycast 的 `copy_text` 焦点切换导致首按快捷键闪烁消失。只有用户在扩展设置中显式打开 `Prefill Selected Text` 时才读取前台选中文本作为初始查询。
 - Raycast 结果列表显示简中、繁中、英文和类型，不把 `value` 当作列表列展示；`value` 保留在粘贴、复制和打开网页动作中。
 - 输出动作分为 `粘贴为...`、`复制为...`、`打开 PoE2DB 页面...`，每组都提供简中、繁中、英文和 `value`。
 - `Refresh PoE2DB Data` 是 no-view 命令，刷新 PoE2DB autocomplete 数据并写入 Raycast support 目录下的 `cache\poe2db_names.json`。
@@ -81,4 +81,5 @@ $env:Path = 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependen
 - 三语合并必须按 `value` 对齐，不能按 label。
 - 刷新 JSON 时必须带 `Referer` 和 `User-Agent`。
 - Raycast manifest 的 `author` 必须是有效 Raycast 用户名；当前为 `allonli`，发布到别的账号前要同步修改。
+- Raycast 的 `getSelectedText` 会尝试从前台应用复制选中文本；在 Path of Exile 这类游戏窗口里会造成焦点来回切换，默认不要在查询命令启动时调用。
 - 本机普通 PATH 可能没有 `node`；运行 Raycast 扩展验证时先把 Codex 自带 Node 加到 PATH。

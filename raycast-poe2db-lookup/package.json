@@ -18,7 +18,17 @@
       "name": "search",
       "title": "Search PoE2DB Names",
       "description": "Search and paste PoE2DB multilingual names or values.",
-      "mode": "view"
+      "mode": "view",
+      "preferences": [
+        {
+          "name": "prefillSelectedText",
+          "type": "checkbox",
+          "label": "Prefill Selected Text",
+          "description": "Read selected text from the previous app when the command opens. Keep disabled for games to avoid focus flicker.",
+          "required": false,
+          "default": false
+        }
+      ]
     },
     {
       "name": "refresh",

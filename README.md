@@ -41,8 +41,10 @@ npm run dev
 
 Raycast 版包含两个命令：
 
-- `Search PoE2DB Names`：打开查询列表，优先用 Raycast `getSelectedText` 读取前台应用选中文本作为初始查询；支持简中、繁中、英文、`value`、空格分段模糊和拼音搜索。结果列表显示简中、繁中、英文和类型，`value` 只出现在输出动作里。动作菜单可选择粘贴、复制或打开对应 PoE2DB 页面。
+- `Search PoE2DB Names`：打开查询列表；支持简中、繁中、英文、`value`、空格分段模糊和拼音搜索。结果列表显示简中、繁中、英文和类型，`value` 只出现在输出动作里。动作菜单可选择粘贴、复制或打开对应 PoE2DB 页面。
 - `Refresh PoE2DB Data`：刷新 PoE2DB autocomplete 数据并写入 Raycast 扩展缓存。
+
+默认情况下，`Search PoE2DB Names` 不会自动读取前台选中文本。Raycast 的 `getSelectedText` 会通过临时复制和窗口切换读取前台应用选区，在游戏窗口里容易造成 Raycast 首次呼出时闪烁或被游戏抢回焦点。如果确实要在浏览器、编辑器等普通文本应用中使用选中文本预填，可以在 Raycast 扩展设置里打开 `Prefill Selected Text`。
 
 Raycast 版缓存位于 Raycast 分配的扩展 support 目录下：
 

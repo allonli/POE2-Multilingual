@@ -14,7 +14,10 @@ declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
   /** Preferences accessible in the `search` command */
-  export type Search = ExtensionPreferences & {}
+  export type Search = ExtensionPreferences & {
+  /** undefined - Read selected text from the previous app when the command opens. Keep disabled for games to avoid focus flicker. */
+  "prefillSelectedText": boolean
+}
   /** Preferences accessible in the `refresh` command */
   export type Refresh = ExtensionPreferences & {}
 }
