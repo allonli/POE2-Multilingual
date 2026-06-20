@@ -25,6 +25,20 @@
 
 仓库内新增 `raycast-poe2db-lookup`，提供一套 Raycast 版查询能力。它不注册全局快捷键；在 Raycast 里给 `Search PoE2DB Names` 命令设置你自己的快捷键即可。
 
+### 最简单安装方式
+
+1. 下载只包含 Raycast 插件的压缩包：  
+   [raycast-poe2db-lookup.zip](https://github.com/allonli/POE2-Multilingual/releases/download/raycast-poe2db-lookup-v0.1.0/raycast-poe2db-lookup.zip)
+2. 解压后进入 `raycast-poe2db-lookup` 目录。
+3. 在该目录运行：
+
+```powershell
+npm install
+npm run dev
+```
+
+如果你已经安装了 `pnpm`，也可以运行 `pnpm install` 和 `pnpm dev`。Raycast 会打开这个本地扩展。第一次打开成功后，可以在 Raycast 搜索 `Search PoE2DB Names`，并在 Raycast 设置里给这个命令绑定你自己的快捷键。后续不改代码时，可以停止 dev 命令，扩展仍会保留在 Raycast 中。
+
 Raycast 版包含两个命令：
 
 - `Search PoE2DB Names`：打开查询列表，优先用 Raycast `getSelectedText` 读取前台应用选中文本作为初始查询；支持简中、繁中、英文、`value`、空格分段模糊和拼音搜索。结果列表显示简中、繁中、英文和类型，`value` 只出现在输出动作里。动作菜单可选择粘贴、复制或打开对应 PoE2DB 页面。
@@ -36,20 +50,15 @@ Raycast 版缓存位于 Raycast 分配的扩展 support 目录下：
 cache\poe2db_names.json
 ```
 
-开发和验证：
+如果要从完整仓库里的源码运行，进入插件目录后执行同样的命令：
 
 ```powershell
 cd .\raycast-poe2db-lookup
-$env:Path = 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;' + $env:Path
-& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' install
-& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' test
-& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' typecheck
-& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' build
-& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' lint
-& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' dev
+npm install
+npm run dev
 ```
 
-如果本机 PATH 已有 `node` 和 `pnpm`，可以直接使用 `pnpm install/test/typecheck/build/lint/dev`。`package.json` 的 `author` 当前使用 Raycast 用户名 `allonli`；发布到其他账号前需要改成对应 Raycast 用户名。
+也可以运行 `pnpm install` 和 `pnpm dev`。开发验证仍推荐用仓库锁定的 pnpm 流程：`pnpm install`、`pnpm test`、`pnpm typecheck`、`pnpm build`、`pnpm lint`。`package.json` 的 `author` 当前使用 Raycast 用户名 `allonli`；发布到其他账号前需要改成对应 Raycast 用户名。
 
 ## 交互
 
