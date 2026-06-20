@@ -7,12 +7,13 @@
 - 主项目：`.NET 8 WPF`，入口为 `Poe2DbLookup.csproj`。
 - 核心逻辑放在 `Services` 和 `Models` 下，并保持可被 `tests\Poe2DbLookup.Tests.csproj` 直接编译测试。
 - 拼音搜索依赖 NuGet 包 `PinYinConverterCore`，主项目和测试项目需要保持同版本引用。
+- Raycast 扩展位于 `raycast-poe2db-lookup`，使用 TypeScript、`@raycast/api`、`opencc-js` 和 `pinyin-pro`，核心逻辑需保持可被 `raycast-poe2db-lookup\tests` 直接测试。
 - UI 保持紧凑的 Spotlight/Raycast 风格：小窗口、深色、圆角、置顶、低干扰。
 - 不使用 AHK。
 
 ## 当前交互约定
 
-- 默认 `左 Ctrl+E`：全局呼出窗口，可在设置里修改。应用会先用 UI Automation 读取当前焦点控件里的选中文本并立即显示查询窗口；UIA 不可用时再异步回退到剪贴板 `Ctrl+C`，剪贴板回退会先写入哨兵值并短重试，避免把旧剪贴板误当成选区。没有选中文本时会清空搜索框。
+- 默认 `左 Ctrl+E`：全局呼出窗口，可在设置里修改。应用会先用 UI Automation 读取当前焦点控件里的选中文本并立即显示查询窗口；UIA 不可用且外部窗口不是全屏时，再异步回退到剪贴板 `Ctrl+C`，剪贴板回退会先写入哨兵值并短重试，避免把旧剪贴板误当成选区。全屏外部窗口不会被还原或缩小。没有选中文本时会清空搜索框。
 - 搜索支持常用繁简体互通、空格分段模糊匹配和拼音匹配，例如 `远射` / `遠射`、`我 火`、`wjnh` / `woji` 都能匹配对应词条。
 - 结果列表显示 `简中`、`繁中`、`英文` 和 `类型`，不显示 `value` 列；被省略号裁剪的文本可通过 Tooltip 查看完整原文。
 - `Enter` 或双击结果：在当前选中结果行附近打开二级输出菜单，可选择粘贴完整的 `简中`、`繁中`、`英文` 或 `value` 到刚才激活的外部窗口输入框；按住 `Ctrl` 或 `Alt` 后回车/左键选择菜单项，会打开对应 PoE2DB 语言页面；目标输入框支持 UI Automation 且当前内容被全选或为空时优先直接写入，否则继续走剪贴板和左 Ctrl+V。
@@ -21,6 +22,15 @@
 - `上 / 下`：切换选中搜索结果。
 - 默认启动后只驻留系统托盘；托盘图标右键菜单提供 `设置` 和 `退出`。
 - 主窗口右下角齿轮按钮打开设置界面；设置界面支持监听方式修改呼出快捷键、刷新快捷键，并可设置开机启动。监听新快捷键期间会临时暂停全局呼出热键，避免 `Ctrl+E` 等旧快捷键抢前台。
+
+## Raycast 扩展约定
+
+- 不在扩展内注册单独全局快捷键；用户在 Raycast 里给 `Search PoE2DB Names` 自行设置快捷键。
+- `Search PoE2DB Names` 用 Raycast `getSelectedText` 读取前台选中文本作为初始查询；读取不到时保持空搜索框。
+- Raycast 结果列表显示简中、繁中、英文和类型，不把 `value` 当作列表列展示；`value` 保留在粘贴、复制和打开网页动作中。
+- 输出动作分为 `粘贴为...`、`复制为...`、`打开 PoE2DB 页面...`，每组都提供简中、繁中、英文和 `value`。
+- `Refresh PoE2DB Data` 是 no-view 命令，刷新 PoE2DB autocomplete 数据并写入 Raycast support 目录下的 `cache\poe2db_names.json`。
+- Raycast 版不迁移 WPF 托盘、开机启动、低层键盘 hook、UIA 直接写入等 Windows 桌面专属能力；这些由 Raycast 命令、快捷键设置和 `Action.Paste` 承担。
 
 ## 常用命令
 
@@ -31,6 +41,14 @@
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RealDotnetTargetVerification.ps1
 & 'C:\Users\allon\.dotnet\dotnet.exe' build .\Poe2DbLookup.csproj -c Release
 & 'C:\Users\allon\.dotnet\dotnet.exe' publish .\Poe2DbLookup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o .\publish
+
+cd .\raycast-poe2db-lookup
+$env:Path = 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;' + $env:Path
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' install
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' test
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' typecheck
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' build
+& 'C:\Users\allon\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\pnpm.cmd' lint
 ```
 
 ## 关键模块
@@ -47,6 +65,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RealDotnetTarget
 - `Services\ClipboardBridge.cs`：读取外部选中文本，并把结果粘贴回外部窗口。读取主路径是 UI Automation，剪贴板是带哨兵和短重试的回退路径；粘贴会先尝试安全的 UIA 全选/空值写入，再回退到剪贴板左 Ctrl+V。
 - `Services\Poe2DbClient.cs`：PoE2DB 页面、header JS 和 autocomplete JSON 下载解析。
 - `Services\NameIndex.cs`：按 `value` 合并三语数据并提供搜索，搜索匹配会做常用繁简体归一化、空格分段模糊匹配和拼音字段缓存。
+- `raycast-poe2db-lookup\src\poe2db-data.ts`：Raycast 版 PoE2DB 下载、header JS 解析、autocomplete 文件解析和三语合并。
+- `raycast-poe2db-lookup\src\search-index.ts`：Raycast 版搜索索引，支持繁简归一、分段模糊和拼音匹配。
+- `raycast-poe2db-lookup\src\search.tsx`：Raycast 查询列表和粘贴、复制、打开网页动作。
+- `raycast-poe2db-lookup\src\refresh.ts`：Raycast no-view 刷新命令。
+- `raycast-poe2db-lookup\tests\core.test.ts`：Raycast 版核心解析、合并、搜索和输出动作测试。
 
 ## 易错点
 
@@ -57,3 +80,5 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\RealDotnetTarget
 - PoE2DB 在 `poe2db.tw` 下需要使用 `autocompletecb_{lang}`，不是 `autocomplete_{lang}`。
 - 三语合并必须按 `value` 对齐，不能按 label。
 - 刷新 JSON 时必须带 `Referer` 和 `User-Agent`。
+- Raycast manifest 的 `author` 必须是有效 Raycast 用户名；当前为 `allonli`，发布到别的账号前要同步修改。
+- 本机普通 PATH 可能没有 `node`；运行 Raycast 扩展验证时先把 Codex 自带 Node 加到 PATH。

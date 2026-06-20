@@ -14,3 +14,6 @@ publish-next/
 tests/bin/
 tests/obj/
 tests/*.png
+
+raycast-poe2db-lookup/node_modules/
+raycast-poe2db-lookup/dist/
